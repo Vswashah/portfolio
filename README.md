@@ -26,6 +26,7 @@ Personal portfolio website built with Next.js 15, TypeScript, and Tailwind CSS.
 - Resume PDF served at `/resume.pdf`
 
 ## Project Structure
+```
 src/
 ├── app/              # Next.js App Router pages & API routes
 ├── components/
@@ -37,7 +38,7 @@ src/
 ├── lib/              # utils, github, email helpers
 ├── styles/           # globals.css
 └── types/            # TypeScript interfaces
-
+```
 ## Getting Started
 
 ```bash
