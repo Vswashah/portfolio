@@ -73,8 +73,3 @@ Deployed on Vercel. Every push to `main` triggers an automatic deploy.
 ---
 
 Built by [Vishwaa Shah](https://vishwaashah.vercel.app)
-Then push:
-bashcd ~/portfolio
-git add README.md
-git commit -m "docs: add README"
-git push origin main
