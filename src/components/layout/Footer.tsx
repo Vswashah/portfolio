@@ -12,7 +12,7 @@ export default function Footer() {
         <div className="text-right">
           <div className="flex justify-end gap-6 flex-wrap mb-3.5">
             {[
-              { label: 'Email', href: 'mailto:vishwaashah2024@gmail.com', external: false },
+              { label: 'Email', href: 'mailto:vishwaa.career@gmail.com', external: false },
               { label: 'LinkedIn', href: 'https://www.linkedin.com/in/vishwaa-shah', external: true },
               { label: 'GitHub', href: 'https://github.com/Vswashah', external: true },
               { label: 'Résumé', href: '/resume.pdf', external: true },

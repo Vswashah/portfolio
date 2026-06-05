@@ -11,7 +11,7 @@ const COMMANDS: Record<string, () => string[]> = {
   experience: () => ['sys:Work history:', 'out:  [Jan–Apr 2025]  Software Developer Intern @ Palm Infotech', 'out:                  10+ REST APIs, ~30% efficiency gain', 'out:                  Real-time tracking at <250ms latency', 'out:', 'out:  [Sep 2025–Now]  CS Grader @ UT Dallas', 'out:                  80+ students mentored', 'out:                  300+ submissions evaluated per semester'],
   projects: () => ['sys:Selected projects:', 'out:  ★ Trackly                — AI-native issue tracker (RAG + pgvector)', 'out:  ▲ Security Log Detector  — Isolation Forest, 10K+ logs/day, Azure', 'out:  ● Secure Relay Chat      — E2E encrypted, Diffie-Hellman, HMAC', 'out:', 'out:  → Scroll up to the Projects section to see more.'],
   education: () => ['sys:Education:', 'out:  [2021–2025]  B.Tech Computer Engineering', 'out:               Sarvajanik College, Surat — GPA 3.94/4.0', 'out:', 'out:  [2025–2027]  MS Computer Science (in progress)', 'out:               UT Dallas, Richardson TX — Expected May 2027'],
-  contact: () => ['sys:Get in touch:', 'out:  Email    : vishwaashah2024@gmail.com', 'out:  LinkedIn : linkedin.com/in/vishwaa-shah', 'out:  GitHub   : github.com/Vswashah', 'out:', 'out:  Open to: AI engineering roles, internships, ambitious projects.'],
+  contact: () => ['sys:Get in touch:', 'out:  Email    : vishwaa.career@gmail.com', 'out:  LinkedIn : linkedin.com/in/vishwaa-shah', 'out:  GitHub   : github.com/Vswashah', 'out:', 'out:  Open to: AI engineering roles, internships, ambitious projects.'],
   status: () => ['sys:● ONLINE', 'out:  Pursuing MS CS @ UT Dallas', 'out:  Building AI-native products', 'out:  Open to new opportunities'],
   'easter-egg': () => ['warn:> Initialising self-aware portfolio module...', 'out:  ██████████████████████████████ 100%', 'sys:Hello, world. I am Vishwaa\'s portfolio.', 'out:  I think, therefore I deploy. 🚀', 'out:  My stack: curiosity + caffeine + clean abstractions.'],
 }
@@ -30,8 +30,8 @@ const COLOR: Record<LineType, string> = {
 const channels = [
   {
     label: 'Email',
-    value: 'vishwaashah2024@gmail.com',
-    href: 'mailto:vishwaashah2024@gmail.com',
+    value: 'vishwaa.career@gmail.com',
+    href: 'mailto:vishwaa.career@gmail.com',
     external: false,
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="w-[18px] h-[18px]"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>,
   },
