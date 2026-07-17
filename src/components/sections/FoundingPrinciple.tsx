@@ -34,7 +34,7 @@ export default function FoundingPrinciple() {
     <section
       ref={sectionRef}
       id="principle"
-      className="relative py-32 md:py-44 overflow-hidden"
+      className="relative min-h-[100svh] flex flex-col justify-center overflow-hidden"
       style={{
         background: 'var(--bp-paper)',
         backgroundImage:
@@ -50,7 +50,7 @@ export default function FoundingPrinciple() {
         Founding Principle — A-01
       </div>
 
-      <div className="relative max-w-[900px] mx-auto px-6 md:px-10">
+      <div className="relative max-w-[900px] w-full mx-auto px-6 md:px-10 py-24">
         <div data-reveal className="flex items-center gap-4 mb-14">
           <span
             className="text-[11px] tracking-[0.15em] uppercase"
