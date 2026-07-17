@@ -1,101 +1,269 @@
 'use client'
 
-import { useInView } from '@/hooks/useInView'
-import { useCountUp } from '@/hooks/useCountUp'
+import { useEffect, useRef, useState } from 'react'
+import { gsap } from '@/lib/gsap'
 import { metrics } from '@/content/metrics'
 import { cn } from '@/lib/utils'
-import { useRef, useState, useEffect } from 'react'
 
-function MetricCard({ value, suffix, label, index }: {
+interface SignalSheet {
+  mark: string
   value: number
   suffix: string
   label: string
-  index: number
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [count, setCount] = useState(0)
-  const [started, setStarted] = useState(false)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !started) {
-          setStarted(true)
-          observer.unobserve(el)
-        }
-      },
-      { threshold: 0.1 }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [started])
-
-  useEffect(() => {
-    if (!started) return
-    let startTime: number
-    const duration = 1400
-    const step = (timestamp: number) => {
-      if (!startTime) startTime = timestamp
-      const progress = Math.min((timestamp - startTime) / duration, 1)
-      const ease = 1 - Math.pow(1 - progress, 3)
-      setCount(Math.round(ease * value))
-      if (progress < 1) requestAnimationFrame(step)
-    }
-    requestAnimationFrame(step)
-  }, [started, value])
-
-  return (
-    <div
-      ref={ref}
-      className="p-7 rounded-[14px] bg-[var(--surface)] border border-[var(--hair)] transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(77,124,255,0.3)]"
-      style={{ transitionDelay: `${index * 60}ms` }}
-    >
-      <div className="flex items-baseline gap-0.5 mb-2">
-        <span className="text-[36px] font-bold tracking-[-0.03em] leading-none bg-gradient-to-r from-[#4d7cff] to-[#7c5cfc] bg-clip-text text-transparent tabular-nums">
-          {count}
-        </span>
-        <span className="text-[22px] font-bold leading-none bg-gradient-to-r from-[#4d7cff] to-[#7c5cfc] bg-clip-text text-transparent">
-          {suffix}
-        </span>
-      </div>
-      <div className="text-[13px] text-[var(--t2)] leading-[1.4]">{label}</div>
-    </div>
-  )
+  caption: string
+  crossRef?: { sheet: string; text: string; href: string }
 }
 
+const SIGNAL_SHEETS: SignalSheet[] = metrics.map((m, i) => ({
+  ...m,
+  mark: `A-${String(i + 4).padStart(2, '0')}`,
+  caption: [
+    'Palm Infotech — API response & query optimization',
+    'Palm Infotech — NestJS & MySQL backend',
+    'Palm Infotech — unit & integration test suite',
+    'UT Dallas — Data Structures & Algorithm Analysis',
+    'Real-time ingestion & monitoring, cross-project',
+  ][i],
+  ...(i === 4 ? { crossRef: { sheet: 'A-03', text: 'Fleet Telemetry', href: '#projects' } } : {}),
+}))
+
 export default function Signals() {
-  const { ref: headRef, inView: headIn } = useInView()
+  const sectionRef = useRef<HTMLElement>(null)
+  const panelRefs = useRef<Array<HTMLDivElement | null>>([])
+  const indexRef = useRef(0)
+  const isActiveRef = useRef(false)
+
+  const [index, setIndexState] = useState(0)
+  const [liveCount, setLiveCount] = useState(SIGNAL_SHEETS[0].value)
+
+  function goTo(target: number) {
+    const clamped = Math.max(0, Math.min(SIGNAL_SHEETS.length - 1, target))
+    if (clamped === indexRef.current) return
+    const direction = clamped > indexRef.current ? 1 : -1
+    const outgoing = panelRefs.current[indexRef.current]
+    const incoming = panelRefs.current[clamped]
+
+    const tl = gsap.timeline()
+    if (outgoing) {
+      tl.to(outgoing, { opacity: 0, x: -40 * direction, duration: 0.35, ease: 'power2.in' })
+    }
+    if (incoming) {
+      gsap.set(incoming, { x: 40 * direction })
+      tl.to(incoming, { opacity: 1, x: 0, duration: 0.5, ease: 'power3.out' }, outgoing ? '-=0.15' : 0)
+    }
+
+    indexRef.current = clamped
+    setIndexState(clamped)
+  }
+
+  // Entrance reveal, once, when the section first scrolls into view
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+
+    const ctx = gsap.context(() => {
+      const targets = section.querySelectorAll('[data-reveal-cover]')
+      gsap.set(targets, { opacity: 0, y: 28 })
+      gsap.to(targets, {
+        opacity: 1,
+        y: 0,
+        duration: 0.9,
+        ease: 'power3.out',
+        stagger: 0.12,
+        scrollTrigger: {
+          trigger: section,
+          start: 'top 70%',
+          once: true,
+        },
+      })
+    }, section)
+
+    return () => ctx.revert()
+  }, [])
+
+  // Track whether the section is substantially in view, to gate keyboard nav
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isActiveRef.current = entry.isIntersecting
+      },
+      { threshold: 0.5 }
+    )
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [])
+
+  // Count-up the active panel's number whenever the page changes
+  useEffect(() => {
+    const target = SIGNAL_SHEETS[index].value
+    const proxy = { v: 0 }
+    const tween = gsap.to(proxy, {
+      v: target,
+      duration: 1.1,
+      ease: 'power3.out',
+      onUpdate: () => setLiveCount(Math.round(proxy.v)),
+    })
+    return () => {
+      tween.kill()
+    }
+  }, [index])
+
+  // Keyboard navigation — left/right, only while the section is in view
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (!isActiveRef.current) return
+      const target = e.target as HTMLElement | null
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
+
+      if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        goTo(indexRef.current + 1)
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        goTo(indexRef.current - 1)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const current = SIGNAL_SHEETS[index]
 
   return (
-    <section className="py-20 bg-[var(--bg2)]" id="signals">
-      <div className="max-w-[1180px] mx-auto px-10">
+    <section
+      ref={sectionRef}
+      id="signals"
+      className="relative min-h-[100svh] flex flex-col justify-center overflow-hidden"
+      style={{
+        background: 'var(--bp-slate-900)',
+        backgroundImage:
+          'linear-gradient(var(--bp-slate-grid) 1px, transparent 1px), linear-gradient(90deg, var(--bp-slate-grid) 1px, transparent 1px)',
+        backgroundSize: '32px 32px',
+      }}
+    >
+      <div
+        data-reveal-cover
+        className="hidden md:block absolute left-6 top-1/2 -translate-y-1/2 -rotate-90 origin-center text-[11px] tracking-[0.2em] uppercase whitespace-nowrap"
+        style={{ fontFamily: 'var(--ff-plex-mono)', color: '#8a8880' }}
+      >
+        Signals As Load Data — A-04–A-08
+      </div>
 
-        {/* Head */}
-        <div
-          ref={headRef as React.RefObject<HTMLDivElement>}
-          className={cn('reveal max-w-[700px] mb-16', headIn && 'in')}
-        >
-          <span className="block text-[12px] font-medium tracking-[0.15em] uppercase text-[var(--accent)] font-mono mb-3.5">
-            05 — Signals
+      <div className="relative max-w-[900px] w-full mx-auto px-6 md:px-10">
+        <div data-reveal-cover className="flex items-center gap-4 mb-4">
+          <span
+            className="text-[11px] tracking-[0.15em] uppercase"
+            style={{ fontFamily: 'var(--ff-plex-mono)', color: '#8a8880' }}
+          >
+            SHEET {current.mark}
           </span>
-          <h2 className="text-[clamp(28px,4vw,44px)] font-bold leading-[1.15] tracking-[-0.025em]">
-            The work, in numbers.
-          </h2>
+          <span className="flex-1 h-px" style={{ background: 'var(--bp-slate-grid)' }} />
+          <span
+            className="text-[11px] tracking-[0.1em]"
+            style={{ fontFamily: 'var(--ff-plex-mono)', color: '#8a8880' }}
+          >
+            {String(index + 1).padStart(2, '0')} / {String(SIGNAL_SHEETS.length).padStart(2, '0')}
+          </span>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-4 gap-4 max-md:grid-cols-2 max-sm:grid-cols-1">
-          {metrics.map((m, i) => (
-            <MetricCard
-              key={m.label}
-              value={m.value}
-              suffix={m.suffix}
-              label={m.label}
-              index={i}
-            />
+        <div data-reveal-cover className="relative min-h-[340px] md:min-h-[420px]">
+          {SIGNAL_SHEETS.map((sheet, i) => (
+            <div
+              key={sheet.label}
+              ref={(el) => {
+                panelRefs.current[i] = el
+              }}
+              className="absolute inset-0"
+              style={{ opacity: i === 0 ? 1 : 0, pointerEvents: i === index ? 'auto' : 'none' }}
+            >
+              <div className="flex items-baseline gap-2">
+                <span
+                  className="tabular-nums font-semibold tracking-[-0.02em]"
+                  style={{ fontFamily: 'var(--ff-plex-sans)', color: 'var(--bp-slate-fg)', fontSize: 'clamp(80px, 14vw, 180px)' }}
+                >
+                  {i === index ? liveCount : sheet.value}
+                </span>
+                <span
+                  className="font-semibold"
+                  style={{ fontFamily: 'var(--ff-plex-sans)', color: 'var(--bp-slate-fg)', fontSize: 'clamp(36px, 6vw, 80px)' }}
+                >
+                  {sheet.suffix}
+                </span>
+              </div>
+
+              <div
+                className="text-[15px] md:text-[17px] tracking-[0.02em] uppercase mt-2"
+                style={{ fontFamily: 'var(--ff-plex-mono)', color: '#c9c6ba' }}
+              >
+                {sheet.label}
+              </div>
+
+              <div
+                className="text-[13px] mt-3"
+                style={{ fontFamily: 'var(--ff-plex-mono)', color: '#8a8880' }}
+              >
+                {sheet.caption}
+              </div>
+
+              {sheet.crossRef && (
+                <a
+                  href={sheet.crossRef.href}
+                  className="inline-flex items-center gap-2 mt-6 text-[12px] tracking-[0.08em] uppercase border px-3 py-1.5 transition-colors duration-200 hover:border-[#8a8880]"
+                  style={{ fontFamily: 'var(--ff-plex-mono)', color: '#c9c6ba', borderColor: 'var(--bp-slate-grid)' }}
+                >
+                  → See {sheet.crossRef.sheet} · {sheet.crossRef.text}
+                </a>
+              )}
+            </div>
           ))}
+        </div>
+
+        <div data-reveal-cover className="flex items-center gap-5 mt-10">
+          <button
+            type="button"
+            onClick={() => goTo(index - 1)}
+            disabled={index === 0}
+            aria-label="Previous signal"
+            className="w-9 h-9 flex items-center justify-center border text-[14px] transition-colors duration-200 disabled:opacity-30 hover:border-[#8a8880]"
+            style={{ borderColor: 'var(--bp-slate-grid)', color: 'var(--bp-slate-fg)' }}
+          >
+            ←
+          </button>
+
+          <div className="flex gap-2">
+            {SIGNAL_SHEETS.map((sheet, i) => (
+              <button
+                key={sheet.mark}
+                type="button"
+                onClick={() => goTo(i)}
+                aria-label={`Go to sheet ${sheet.mark}`}
+                className="w-2.5 h-2.5 transition-colors duration-200"
+                style={{ background: i === index ? 'var(--bp-slate-fg)' : 'var(--bp-slate-grid)' }}
+              />
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => goTo(index + 1)}
+            disabled={index === SIGNAL_SHEETS.length - 1}
+            aria-label="Next signal"
+            className="w-9 h-9 flex items-center justify-center border text-[14px] transition-colors duration-200 disabled:opacity-30 hover:border-[#8a8880]"
+            style={{ borderColor: 'var(--bp-slate-grid)', color: 'var(--bp-slate-fg)' }}
+          >
+            →
+          </button>
+
+          <span
+            className={cn('ml-auto text-[11px] tracking-[0.1em] uppercase hidden sm:block')}
+            style={{ fontFamily: 'var(--ff-plex-mono)', color: '#6f6d66' }}
+          >
+            Use ← → to navigate
+          </span>
         </div>
       </div>
     </section>
