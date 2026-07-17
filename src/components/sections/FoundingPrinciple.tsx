@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { gsap } from '@/lib/gsap'
+import SheetStatement from '@/components/blueprint/SheetStatement'
 
 export default function FoundingPrinciple() {
   const sectionRef = useRef<HTMLElement>(null)
@@ -61,17 +62,9 @@ export default function FoundingPrinciple() {
           <span className="flex-1 h-px" style={{ background: 'var(--bp-paper-line)' }} />
         </div>
 
-        <h2
-          data-reveal
-          className="font-semibold leading-[1.05] tracking-[-0.02em] mb-8"
-          style={{
-            fontFamily: 'var(--ff-plex-sans)',
-            color: 'var(--bp-ink-900)',
-            fontSize: 'clamp(34px, 5.2vw, 68px)',
-          }}
-        >
+        <SheetStatement data-reveal className="mb-8" color="var(--bp-ink-900)">
           Systems are drawings before they&apos;re software.
-        </h2>
+        </SheetStatement>
 
         <p
           data-reveal

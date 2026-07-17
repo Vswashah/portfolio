@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { gsap, ScrollTrigger } from '@/lib/gsap'
 import { timeline } from '@/content/timeline'
 import { experiences } from '@/content/experience'
+import SheetStatement from '@/components/blueprint/SheetStatement'
 
 const bulletsByTimelineId: Record<string, string[]> = {
   industry: experiences.find((e) => e.id === 'palm-infotech')?.bullets ?? [],
@@ -143,17 +144,9 @@ export default function Experience() {
             <span className="flex-1 h-px" style={{ background: 'var(--bp-slate-grid)' }} />
           </div>
 
-          <h2
-            data-reveal-cover
-            className="font-semibold leading-[1.1] tracking-[-0.02em]"
-            style={{
-              fontFamily: 'var(--ff-plex-sans)',
-              color: 'var(--bp-slate-fg)',
-              fontSize: 'clamp(28px, 4vw, 44px)',
-            }}
-          >
+          <SheetStatement data-reveal-cover className="leading-[1.1]" color="var(--bp-slate-fg)">
             Structural schedule — roles load-bearing to the build.
-          </h2>
+          </SheetStatement>
         </div>
       </div>
 
