@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://vishwaashah.vercel.app'),
   title: 'Vishwaa Shah — AI Engineer & Software Builder',
   description:
     'AI Engineer and Software Developer building intelligent systems that learn, scale, and solve real-world problems. MS Computer Science @ UT Dallas.',
