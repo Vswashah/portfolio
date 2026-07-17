@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 const links = [
-  { label: 'Story', href: '#story' },
+  { label: 'Principle', href: '#principle' },
   { label: 'Stack', href: '#stack' },
   { label: 'Experience', href: '#work' },
   { label: 'Projects', href: '#projects' },
