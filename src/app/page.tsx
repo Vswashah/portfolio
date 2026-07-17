@@ -1,6 +1,7 @@
 import Nav from '@/components/layout/Nav'
 import Footer from '@/components/layout/Footer'
 import Hero from '@/components/sections/Hero'
+import FoundingPrinciple from '@/components/sections/FoundingPrinciple'
 import Story from '@/components/sections/Story'
 import Experience from '@/components/sections/Experience'
 import Projects from '@/components/sections/Projects'
@@ -14,6 +15,7 @@ export default function Home() {
       <Nav />
       <main className="relative z-10">
         <Hero />
+        <FoundingPrinciple />
         <Story />
         <Experience />
         <Projects />
