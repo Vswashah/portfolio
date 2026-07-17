@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { gsap } from '@/lib/gsap'
+import { gsap, ScrollTrigger } from '@/lib/gsap'
 import { metrics } from '@/content/metrics'
 import { cn } from '@/lib/utils'
 
@@ -31,12 +31,18 @@ export default function Signals() {
   const sectionRef = useRef<HTMLElement>(null)
   const panelRefs = useRef<Array<HTMLDivElement | null>>([])
   const indexRef = useRef(0)
-  const isActiveRef = useRef(false)
+  const scrollTriggerRef = useRef<ScrollTrigger | null>(null)
+  const revealedRef = useRef(false)
 
   const [index, setIndexState] = useState(0)
   const [liveCount, setLiveCount] = useState(SIGNAL_SHEETS[0].value)
 
-  function goTo(target: number) {
+  // Runs the panel crossfade/slide and updates state — the single place that
+  // actually changes which sheet is showing. Only ScrollTrigger's onUpdate
+  // calls this directly; everything else (keyboard, buttons, dots) instead
+  // moves the real scroll position via requestIndex, so scroll stays the one
+  // source of truth for which sheet is active.
+  function applyTransition(target: number) {
     const clamped = Math.max(0, Math.min(SIGNAL_SHEETS.length - 1, target))
     if (clamped === indexRef.current) return
     const direction = clamped > indexRef.current ? 1 : -1
@@ -56,44 +62,65 @@ export default function Signals() {
     setIndexState(clamped)
   }
 
-  // Entrance reveal, once, when the section first scrolls into view
+  // Keyboard/button/dot navigation — scrolls the page to the point in the
+  // pinned range that corresponds to the target sheet; ScrollTrigger's
+  // onUpdate below picks up the resulting scroll and calls applyTransition.
+  function requestIndex(target: number) {
+    const st = scrollTriggerRef.current
+    if (!st) return
+    const clamped = Math.max(0, Math.min(SIGNAL_SHEETS.length - 1, target))
+    const progress = clamped / (SIGNAL_SHEETS.length - 1)
+    const scrollPos = st.start + progress * (st.end - st.start)
+    window.scrollTo({ top: scrollPos, behavior: 'smooth' })
+  }
+
+  // Pin the section and map scroll progress through it directly to slide
+  // index, snapping to each sheet — this is what makes scrolling (not just
+  // arrow keys) change the slide.
   useEffect(() => {
     const section = sectionRef.current
     if (!section) return
 
-    const ctx = gsap.context(() => {
-      const targets = section.querySelectorAll('[data-reveal-cover]')
-      gsap.set(targets, { opacity: 0, y: 28 })
-      gsap.to(targets, {
-        opacity: 1,
-        y: 0,
-        duration: 0.9,
-        ease: 'power3.out',
-        stagger: 0.12,
-        scrollTrigger: {
-          trigger: section,
-          start: 'top 70%',
-          once: true,
-        },
-      })
-    }, section)
+    const total = SIGNAL_SHEETS.length
 
-    return () => ctx.revert()
-  }, [])
-
-  // Track whether the section is substantially in view, to gate keyboard nav
-  useEffect(() => {
-    const section = sectionRef.current
-    if (!section) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        isActiveRef.current = entry.isIntersecting
+    const st = ScrollTrigger.create({
+      trigger: section,
+      start: 'top top',
+      end: () => `+=${window.innerHeight * (total - 1)}`,
+      pin: true,
+      scrub: 0.3,
+      snap: {
+        snapTo: 1 / (total - 1),
+        duration: 0.35,
+        ease: 'power1.inOut',
       },
-      { threshold: 0.5 }
-    )
-    observer.observe(section)
-    return () => observer.disconnect()
+      onEnter: () => {
+        if (revealedRef.current) return
+        revealedRef.current = true
+        const targets = section.querySelectorAll('[data-reveal-cover]')
+        gsap.set(targets, { opacity: 0, y: 28 })
+        gsap.to(targets, {
+          opacity: 1,
+          y: 0,
+          duration: 0.9,
+          ease: 'power3.out',
+          stagger: 0.12,
+        })
+      },
+      onUpdate: (self) => {
+        const newIndex = Math.round(self.progress * (total - 1))
+        if (newIndex !== indexRef.current) {
+          applyTransition(newIndex)
+        }
+      },
+    })
+
+    scrollTriggerRef.current = st
+
+    return () => {
+      st.kill()
+      scrollTriggerRef.current = null
+    }
   }, [])
 
   // Count-up the active panel's number whenever the page changes
@@ -114,16 +141,21 @@ export default function Signals() {
   // Keyboard navigation — left/right, only while the section is in view
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (!isActiveRef.current) return
+      const st = scrollTriggerRef.current
+      // GSAP's own `isActive` is strictly progress > 0 && < 1, so it reads
+      // false exactly at the pin's start boundary — which is precisely where
+      // a user lands after clicking the "Signals" nav link. Check the actual
+      // scroll range instead so the boundary counts as "in this section".
+      if (!st || window.scrollY < st.start || window.scrollY > st.end) return
       const target = e.target as HTMLElement | null
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
 
       if (e.key === 'ArrowRight') {
         e.preventDefault()
-        goTo(indexRef.current + 1)
+        requestIndex(indexRef.current + 1)
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault()
-        goTo(indexRef.current - 1)
+        requestIndex(indexRef.current - 1)
       }
     }
 
@@ -225,7 +257,7 @@ export default function Signals() {
         <div data-reveal-cover className="flex items-center gap-5 mt-10">
           <button
             type="button"
-            onClick={() => goTo(index - 1)}
+            onClick={() => requestIndex(index - 1)}
             disabled={index === 0}
             aria-label="Previous signal"
             className="w-9 h-9 flex items-center justify-center border text-[14px] transition-colors duration-200 disabled:opacity-30 hover:border-[#8a8880]"
@@ -239,7 +271,7 @@ export default function Signals() {
               <button
                 key={sheet.mark}
                 type="button"
-                onClick={() => goTo(i)}
+                onClick={() => requestIndex(i)}
                 aria-label={`Go to sheet ${sheet.mark}`}
                 className="w-2.5 h-2.5 transition-colors duration-200"
                 style={{ background: i === index ? 'var(--bp-slate-fg)' : 'var(--bp-slate-grid)' }}
@@ -249,7 +281,7 @@ export default function Signals() {
 
           <button
             type="button"
-            onClick={() => goTo(index + 1)}
+            onClick={() => requestIndex(index + 1)}
             disabled={index === SIGNAL_SHEETS.length - 1}
             aria-label="Next signal"
             className="w-9 h-9 flex items-center justify-center border text-[14px] transition-colors duration-200 disabled:opacity-30 hover:border-[#8a8880]"
@@ -262,7 +294,7 @@ export default function Signals() {
             className={cn('ml-auto text-[11px] tracking-[0.1em] uppercase hidden sm:block')}
             style={{ fontFamily: 'var(--ff-plex-mono)', color: '#6f6d66' }}
           >
-            Use ← → to navigate
+            Scroll, or use ← →
           </span>
         </div>
       </div>
