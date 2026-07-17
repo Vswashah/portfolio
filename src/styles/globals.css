@@ -29,6 +29,22 @@
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Blueprint theme tokens — used by Hero cover sheet for now,
+     will expand site-wide section by section */
+  --bp-paper:      #f5f1e8;
+  --bp-paper-line: #e2d9c3;
+  --bp-margin:     #fafaf9;
+  --bp-ink-900:    #1a1a1a;
+  --bp-ink-700:    #404040;
+  --bp-ink-500:    #737373;
+  --bp-grid-line:  #e5e5e2;
+  --bp-slate-900:  #2a2a28;
+  --bp-slate-grid: #3d3d3a;
+  --bp-slate-fg:   #f0ece1;
+
+  --ff-plex-sans: var(--font-plex-sans), 'IBM Plex Sans', sans-serif;
+  --ff-plex-mono: var(--font-plex-mono), 'IBM Plex Mono', monospace;
 }
 
 *, *::before, *::after {

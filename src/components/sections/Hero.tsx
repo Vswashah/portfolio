@@ -5,103 +5,148 @@ import { useInView } from '@/hooks/useInView'
 import { cn } from '@/lib/utils'
 
 export default function Hero() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const { ref: badgeRef, inView: badgeIn } = useInView()
-  const { ref: rolesRef, inView: rolesIn } = useInView()
-  const { ref: h1Ref, inView: h1In } = useInView()
-  const { ref: ledeRef, inView: ledeIn } = useInView()
-  const { ref: ctaRef, inView: ctaIn } = useInView()
+  const svgRef = useRef<SVGSVGElement>(null)
+  const { ref: nameRef, inView: nameIn } = useInView()
+  const { ref: lineRef, inView: lineIn } = useInView()
+  const { ref: specRef, inView: specIn } = useInView()
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    let W = 0, H = 0, dpr = 1, animFrame = 0
-    const nodes = Array.from({ length: 90 }, () => ({ x: 0, y: 0, vx: (Math.random() - 0.5) * 0.7, vy: (Math.random() - 0.5) * 0.7 }))
-    function resize() {
-      dpr = window.devicePixelRatio || 1
-      W = canvas!.offsetWidth
-      H = canvas!.offsetHeight
-      canvas!.width = W * dpr
-      canvas!.height = H * dpr
-      ctx!.scale(dpr, dpr)
-      nodes.forEach(n => { n.x = Math.random() * W; n.y = Math.random() * H })
-    }
-    function draw() {
-      ctx!.clearRect(0, 0, W, H)
-      for (const n of nodes) {
-        n.x += n.vx; n.y += n.vy
-        if (n.x < 0 || n.x > W) n.vx *= -1
-        if (n.y < 0 || n.y > H) n.vy *= -1
+    const svg = svgRef.current
+    if (!svg) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const paths = svg.querySelectorAll<SVGPathElement>('.bp-draw')
+    paths.forEach((path) => {
+      const len = path.getTotalLength()
+      if (reduce) {
+        path.style.strokeDasharray = 'none'
+        path.style.strokeDashoffset = '0'
+        return
       }
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const dx = nodes[i].x - nodes[j].x
-          const dy = nodes[i].y - nodes[j].y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist < 160) {
-            ctx!.beginPath()
-            ctx!.strokeStyle = `rgba(77,124,255,${0.12 * (1 - dist / 160)})`
-            ctx!.lineWidth = 0.8
-            ctx!.moveTo(nodes[i].x, nodes[i].y)
-            ctx!.lineTo(nodes[j].x, nodes[j].y)
-            ctx!.stroke()
-          }
-        }
-      }
-      for (const n of nodes) {
-        ctx!.beginPath()
-        ctx!.arc(n.x, n.y, 1.8, 0, Math.PI * 2)
-        ctx!.fillStyle = 'rgba(77,124,255,0.55)'
-        ctx!.fill()
-      }
-      animFrame = requestAnimationFrame(draw)
-    }
-    resize()
-    draw()
-    window.addEventListener('resize', resize)
-    return () => { cancelAnimationFrame(animFrame); window.removeEventListener('resize', resize) }
+      path.style.strokeDasharray = `${len}`
+      path.style.strokeDashoffset = `${len}`
+      path.getBoundingClientRect()
+      path.style.transition = 'stroke-dashoffset 1.6s var(--ease-out-expo)'
+      requestAnimationFrame(() => {
+        path.style.strokeDashoffset = '0'
+      })
+    })
   }, [])
 
   return (
-    <header className="relative min-h-svh flex items-center overflow-hidden">
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-60" aria-hidden="true" />
-      <div className="relative z-10 max-w-[1180px] mx-auto px-10 pt-32 pb-20">
-        <div ref={badgeRef as React.RefObject<HTMLDivElement>} className={cn('reveal inline-flex items-center gap-2.5 bg-[rgba(34,211,160,0.1)] border border-[rgba(34,211,160,0.25)] rounded-full px-4 py-1.5 text-[13px] text-[var(--green)] mb-7', badgeIn && 'in')}>
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] shadow-[0_0_8px_var(--green)] animate-pulse" />
-          Currently pursuing <b className="font-semibold">MS Computer Science @ UT Dallas</b>
-        </div>
-        <div ref={rolesRef as React.RefObject<HTMLDivElement>} className={cn('reveal flex flex-wrap gap-2.5 mb-5 [transition-delay:100ms]', rolesIn && 'in')}>
-          {['AI Engineer', 'Software Developer', 'Builder'].map((r, i) => (
-            <span key={r} className="text-[13px] font-medium tracking-widest uppercase text-[var(--t3)]">
-              {i > 0 && <span className="mr-2.5 opacity-40">·</span>}{r}
-            </span>
-          ))}
-        </div>
-        <h1 ref={h1Ref as React.RefObject<HTMLHeadingElement>} className={cn('reveal text-[clamp(52px,7vw,96px)] font-bold leading-none tracking-[-0.03em] [transition-delay:150ms]', h1In && 'in')}>
-          <span className="bg-gradient-to-r from-[#4d7cff] to-[#7c5cfc] bg-clip-text text-transparent">Vishwaa Shah</span>
-        </h1>
-        <p ref={ledeRef as React.RefObject<HTMLParagraphElement>} className={cn('reveal text-[clamp(16px,2vw,20px)] text-[var(--t2)] mt-4 max-w-[520px] [transition-delay:200ms]', ledeIn && 'in')}>
-          Building scalable software, intelligent systems, and AI-powered experiences.
-        </p>
-        <div ref={ctaRef as React.RefObject<HTMLDivElement>} className={cn('reveal flex flex-wrap gap-3 mt-9 [transition-delay:250ms]', ctaIn && 'in')}>
-          <a href="#projects" className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-[15px] font-medium text-white bg-gradient-to-r from-[#4d7cff] to-[#7c5cfc] hover:-translate-y-0.5 transition-all duration-200">
-            View Projects
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-          </a>
-          <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-[15px] font-medium bg-[var(--surface)] border border-[var(--hair)] text-[var(--t2)] hover:text-[var(--t1)] transition-all duration-200">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" /></svg>
-            Resume
-          </a>
-          <a href="#contact" className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-[15px] font-medium bg-[var(--surface)] border border-[var(--hair)] text-[var(--t2)] hover:text-[var(--t1)] transition-all duration-200">
-            Contact
-          </a>
+    <header
+      className="relative min-h-svh flex flex-col overflow-hidden"
+      style={{
+        background: 'var(--bp-slate-900)',
+        backgroundImage:
+          'linear-gradient(var(--bp-slate-grid) 1px, transparent 1px), linear-gradient(90deg, var(--bp-slate-grid) 1px, transparent 1px)',
+        backgroundSize: '32px 32px',
+      }}
+    >
+      <div className="relative z-10 flex-1 flex flex-col justify-center max-w-[1400px] w-full mx-auto px-6 md:px-10 py-24">
+        <svg
+          ref={svgRef}
+          viewBox="0 0 1200 420"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1300px] h-auto opacity-70 pointer-events-none"
+          aria-hidden="true"
+        >
+          <rect
+            className="bp-draw"
+            x="120" y="60" width="960" height="300"
+            fill="none" stroke="#8a8880" strokeWidth="1.2"
+          />
+          <path
+            className="bp-draw"
+            d="M120,210 L1080,210 M480,60 L480,360 M720,60 L720,360"
+            fill="none" stroke="#6f6d66" strokeWidth="1"
+          />
+          <path
+            className="bp-draw"
+            d="M120,60 L60,20 M1080,60 L1140,20 M120,360 L60,400 M1080,360 L1140,400"
+            fill="none" stroke="#6f6d66" strokeWidth="1"
+          />
+          <circle className="bp-draw" cx="600" cy="210" r="4" fill="#8a8880" />
+        </svg>
+
+        <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10">
+          <div className="flex-1 min-w-0">
+            <h1
+              ref={nameRef as React.RefObject<HTMLHeadingElement>}
+              className={cn(
+                'reveal font-semibold uppercase leading-[0.86] tracking-[-0.01em] whitespace-nowrap',
+                nameIn && 'in'
+              )}
+              style={{
+                fontFamily: 'var(--ff-plex-sans)',
+                color: 'var(--bp-slate-fg)',
+                fontSize: 'clamp(52px, 9vw, 132px)',
+              }}
+            >
+              Vishwaa
+              <br />
+              Shah
+            </h1>
+
+            <div
+              ref={lineRef as React.RefObject<HTMLDivElement>}
+              className={cn('reveal mt-7 flex flex-col gap-3 [transition-delay:150ms]', lineIn && 'in')}
+            >
+              <p
+                className="text-[15px] md:text-[17px] max-w-[520px]"
+                style={{ fontFamily: 'var(--ff-plex-sans)', color: '#c9c6ba' }}
+              >
+                Systems, drafted before they&apos;re built.
+              </p>
+              <span
+                className="text-[11px] tracking-[0.15em] uppercase"
+                style={{ fontFamily: 'var(--ff-plex-mono)', color: '#8a8880' }}
+              >
+                AI Engineer &amp; Software Developer — MSCS, UT Dallas
+              </span>
+            </div>
+          </div>
+
+          <div
+            ref={specRef as React.RefObject<HTMLDivElement>}
+            className={cn(
+              'reveal w-full lg:w-[280px] shrink-0 p-6 [transition-delay:250ms]',
+              specIn && 'in'
+            )}
+            style={{ background: 'var(--bp-paper)' }}
+          >
+            <div
+              className="text-[10px] tracking-[0.15em] uppercase mb-5"
+              style={{ fontFamily: 'var(--ff-plex-mono)', color: 'var(--bp-ink-500)' }}
+            >
+              Specifications
+            </div>
+            <dl className="flex flex-col gap-3" style={{ fontFamily: 'var(--ff-plex-mono)' }}>
+              {[
+                ['ROLE', 'AI ENGINEER'],
+                ['STACK', '4 DOMAINS'],
+                ['STATUS', 'ACTIVE — DALLAS, TX'],
+                ['DRAFTED', '2026'],
+              ].map(([k, v], i) => (
+                <div key={k}>
+                  {i > 0 && <div className="border-t mb-3" style={{ borderColor: 'var(--bp-paper-line)' }} />}
+                  <dt className="text-[10px]" style={{ color: 'var(--bp-ink-500)' }}>{k}</dt>
+                  <dd className="text-[14px] font-semibold" style={{ color: 'var(--bp-ink-900)' }}>{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </div>
       </div>
-      <div className="absolute bottom-9 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-[11px] tracking-[0.12em] uppercase text-[var(--t3)] z-10 animate-bounce">
-        <span>Scroll</span>
-        <span className="w-px h-9 bg-gradient-to-b from-[var(--t3)] to-transparent" />
+
+      <div
+        className="relative z-10 flex items-center justify-between px-6 md:px-10 py-5 border-t"
+        style={{ borderColor: 'var(--bp-slate-grid)', fontFamily: 'var(--ff-plex-mono)' }}
+      >
+        <span className="text-[11px] tracking-[0.1em] uppercase" style={{ color: '#8a8880' }}>
+          Scroll / Sheet Set
+        </span>
+        <span className="text-[11px] tracking-[0.1em]" style={{ color: '#8a8880' }}>
+          VS-SYS / 2026
+        </span>
       </div>
     </header>
   )
