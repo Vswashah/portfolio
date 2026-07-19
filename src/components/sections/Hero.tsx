@@ -48,8 +48,11 @@ export default function Hero() {
     gsap.set(name, { x: deltaX, y: deltaY, scale: CENTER_SCALE, transformOrigin: '50% 50%', opacity: 1 })
     gsap.set(restTargets, { opacity: 0, y: 24 })
 
+    // Hold the full name visibly grey for a beat before the typewriter
+    // starts, then let each character's fill-to-white read clearly —
+    // slower stagger/duration than a typical fade so the sweep is legible.
     const tl = gsap.timeline()
-    tl.to(split.chars, { color: '#f0ece1', y: 0, duration: 0.25, ease: 'power2.out', stagger: 0.035 })
+    tl.to(split.chars, { color: '#f0ece1', y: 0, duration: 0.4, ease: 'power1.inOut', stagger: 0.09 }, 0.5)
 
     return () => {
       tl.kill()
