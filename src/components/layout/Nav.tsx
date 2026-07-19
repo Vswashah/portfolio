@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import GlassButton from '@/components/blueprint/GlassButton'
 
 const links = [
   { label: 'Principle', href: '#principle' },
@@ -50,20 +51,12 @@ export default function Nav() {
         ))}
       </div>
       <div className="flex items-center gap-2.5">
-        <a
-          href="/resume.pdf"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-5 py-2 text-[12px] tracking-[0.1em] uppercase border border-[var(--bp-slate-grid)] text-[#c9c6ba] hover:text-[var(--bp-slate-fg)] hover:border-[#8a8880] transition-all duration-200"
-        >
+        <GlassButton href="/resume.pdf" target="_blank" rel="noopener noreferrer" variant="outline">
           Resume
-        </a>
-        <a
-          href="#contact"
-          className="inline-flex items-center gap-2 px-5 py-2 text-[12px] tracking-[0.1em] uppercase font-semibold bg-[var(--bp-paper)] text-[var(--bp-ink-900)] hover:bg-[var(--bp-margin)] transition-all duration-200"
-        >
+        </GlassButton>
+        <GlassButton href="#contact" variant="filled">
           Contact
-        </a>
+        </GlassButton>
       </div>
     </nav>
   )
