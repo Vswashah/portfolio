@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { gsap } from '@/lib/gsap'
+import { gsap, SplitText } from '@/lib/gsap'
 
 const NAME_LINE_1 = 'VISHWAA'
 const NAME_LINE_2 = 'SHAH'
@@ -19,39 +19,41 @@ export default function Hero() {
   const nameRef = useRef<HTMLHeadingElement>(null)
 
   // State 1: park the name dead-center (scaled up) before anything is
-  // visible, then run the typewriter. Because the characters are still
-  // opacity:0 (set server-side in the JSX below) at this point, moving the
-  // still-invisible name into its centered position causes no flash.
+  // visible, then run the typewriter via SplitText. The h1 itself starts
+  // opacity:0 (set server-side in the JSX below), so splitting/positioning
+  // it before revealing causes no flash — nothing is visible until the
+  // gsap.set calls below run synchronously in one pass.
   useEffect(() => {
     const header = headerRef.current
     const name = nameRef.current
     if (!header || !name) return
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const chars = name.querySelectorAll<HTMLSpanElement>('[data-char]')
     const restTargets = header.querySelectorAll<HTMLElement>('[data-reveal-cover]')
 
     if (reduceMotion) {
-      gsap.set(name, { x: 0, y: 0, scale: 1 })
-      gsap.set(chars, { opacity: 1 })
+      gsap.set(name, { x: 0, y: 0, scale: 1, opacity: 1 })
       gsap.set(restTargets, { opacity: 1, y: 0 })
       return
     }
+
+    const split = new SplitText(name, { type: 'chars' })
 
     const nameRect = name.getBoundingClientRect()
     const headerRect = header.getBoundingClientRect()
     const deltaX = headerRect.left + headerRect.width / 2 - (nameRect.left + nameRect.width / 2)
     const deltaY = headerRect.top + headerRect.height / 2 - (nameRect.top + nameRect.height / 2)
 
-    gsap.set(name, { x: deltaX, y: deltaY, scale: CENTER_SCALE, transformOrigin: '50% 50%' })
-    gsap.set(chars, { opacity: 0, y: 6 })
+    gsap.set(split.chars, { opacity: 0, y: 6 })
+    gsap.set(name, { x: deltaX, y: deltaY, scale: CENTER_SCALE, transformOrigin: '50% 50%', opacity: 1 })
     gsap.set(restTargets, { opacity: 0, y: 24 })
 
     const tl = gsap.timeline()
-    tl.to(chars, { opacity: 1, y: 0, duration: 0.18, ease: 'power2.out', stagger: 0.035 })
+    tl.to(split.chars, { opacity: 1, y: 0, duration: 0.18, ease: 'power2.out', stagger: 0.035 })
 
     return () => {
       tl.kill()
+      split.revert()
     }
   }, [])
 
@@ -109,20 +111,12 @@ export default function Hero() {
                 fontFamily: 'var(--ff-plex-sans)',
                 color: 'var(--bp-slate-fg)',
                 fontSize: 'clamp(52px, 9vw, 132px)',
+                opacity: 0,
               }}
             >
-              <span aria-hidden="true">
-                {NAME_LINE_1.split('').map((ch, i) => (
-                  <span key={`l1-${i}`} data-char className="inline-block" style={{ opacity: 0 }}>{ch}</span>
-                ))}
-              </span>
+              {NAME_LINE_1}{' '}
               <br />
-              <span aria-hidden="true">
-                {NAME_LINE_2.split('').map((ch, i) => (
-                  <span key={`l2-${i}`} data-char className="inline-block" style={{ opacity: 0 }}>{ch}</span>
-                ))}
-              </span>
-              <span className="sr-only">{NAME_LINE_1} {NAME_LINE_2}</span>
+              {NAME_LINE_2}
             </h1>
 
             <div data-reveal-cover className="mt-7 flex flex-col gap-3" style={{ opacity: 0 }}>
