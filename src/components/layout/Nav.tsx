@@ -22,13 +22,14 @@ export default function Nav() {
 
   return (
     <nav
+      data-reveal-cover
       className={cn(
         'fixed top-0 left-0 right-0 z-50 flex items-center justify-between gap-6 px-6 md:px-10 h-16 border-b transition-all duration-300',
         scrolled
           ? 'bg-[rgba(42,42,40,0.9)] border-[var(--bp-slate-grid)] backdrop-blur-lg'
           : 'bg-transparent border-transparent'
       )}
-      style={{ fontFamily: 'var(--ff-plex-mono)' }}
+      style={{ fontFamily: 'var(--ff-plex-mono)', opacity: 0 }}
     >
       <a href="#top" className="flex items-center gap-2.5 font-semibold text-[15px]" style={{ color: 'var(--bp-slate-fg)' }}>
         <span
