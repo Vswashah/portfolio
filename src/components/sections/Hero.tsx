@@ -29,7 +29,7 @@ export default function Hero() {
     if (!header || !name) return
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const restTargets = header.querySelectorAll<HTMLElement>('[data-reveal-cover]')
+    const restTargets = document.querySelectorAll<HTMLElement>('[data-reveal-cover]')
 
     if (reduceMotion) {
       gsap.set(name, { x: 0, y: 0, scale: 1, opacity: 1 })
@@ -44,12 +44,12 @@ export default function Hero() {
     const deltaX = headerRect.left + headerRect.width / 2 - (nameRect.left + nameRect.width / 2)
     const deltaY = headerRect.top + headerRect.height / 2 - (nameRect.top + nameRect.height / 2)
 
-    gsap.set(split.chars, { opacity: 0, y: 6 })
+    gsap.set(split.chars, { color: '#6f6d66', y: 4 })
     gsap.set(name, { x: deltaX, y: deltaY, scale: CENTER_SCALE, transformOrigin: '50% 50%', opacity: 1 })
     gsap.set(restTargets, { opacity: 0, y: 24 })
 
     const tl = gsap.timeline()
-    tl.to(split.chars, { opacity: 1, y: 0, duration: 0.18, ease: 'power2.out', stagger: 0.035 })
+    tl.to(split.chars, { color: '#f0ece1', y: 0, duration: 0.25, ease: 'power2.out', stagger: 0.035 })
 
     return () => {
       tl.kill()
@@ -68,7 +68,7 @@ export default function Hero() {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduceMotion) return
 
-    const restTargets = header.querySelectorAll<HTMLElement>('[data-reveal-cover]')
+    const restTargets = document.querySelectorAll<HTMLElement>('[data-reveal-cover]')
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
