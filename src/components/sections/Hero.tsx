@@ -11,7 +11,7 @@ const qualities: [string, string][] = [
   ['FULL-STACK', 'Ships frontend through infra'],
   ['AI-NATIVE', 'Real orchestration, not API wrappers'],
   ['PRODUCTION-MINDED', 'CI/CD, tested, real metrics'],
-  ['BUILDER & MENTOR', 'Co-founder while mentoring 80+ students'],
+  ['ACCELERATOR', 'CometX Accelerator 2026 — UT Dallas x Harvard Business School Foundry | Top 20 / 181 Teams, Draper Pitch Competition'],
 ]
 
 export default function Hero() {
