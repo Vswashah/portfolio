@@ -1,5 +1,4 @@
 import Nav from '@/components/layout/Nav'
-import Footer from '@/components/layout/Footer'
 import Hero from '@/components/sections/Hero'
 import FoundingPrinciple from '@/components/sections/FoundingPrinciple'
 import Experience from '@/components/sections/Experience'
@@ -20,7 +19,6 @@ export default function Home() {
         <Signals />
         <Contact />
       </main>
-      <Footer />
     </>
   )
 }
