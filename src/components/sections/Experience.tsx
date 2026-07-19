@@ -27,7 +27,7 @@ function StructuralElement({ element }: { element: (typeof elements)[number] }) 
       className="grid grid-cols-[minmax(0,220px)_1fr] gap-8 py-9 border-t max-md:grid-cols-1 max-md:gap-3"
       style={{ borderColor: 'var(--bp-slate-grid)' }}
     >
-      <div>
+      <div data-parallax="mark">
         <span
           className="inline-flex items-center justify-center w-11 h-11 border text-[12px] font-semibold mb-3"
           style={{ borderColor: '#8a8880', color: 'var(--bp-slate-fg)', fontFamily: 'var(--ff-plex-mono)' }}
@@ -45,7 +45,7 @@ function StructuralElement({ element }: { element: (typeof elements)[number] }) 
         </div>
       </div>
 
-      <div>
+      <div data-parallax="content">
         <h3
           className="font-semibold mb-3"
           style={{ fontFamily: 'var(--ff-plex-sans)', color: 'var(--bp-slate-fg)', fontSize: 'clamp(19px, 2.2vw, 24px)' }}
@@ -71,6 +71,7 @@ function StructuralElement({ element }: { element: (typeof elements)[number] }) 
 
 export default function Experience() {
   const sectionRef = useRef<HTMLElement>(null)
+  const bgRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const section = sectionRef.current
@@ -106,6 +107,43 @@ export default function Experience() {
             stagger: 0.1,
           }),
       })
+
+      // Parallax — a classic scroll-sickness trigger, so skip it entirely
+      // under reduced motion rather than just speeding it up.
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        if (bgRef.current) {
+          gsap.to(bgRef.current, {
+            y: 70,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: section,
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: true,
+            },
+          })
+        }
+
+        section.querySelectorAll<HTMLElement>('[data-reveal-item]').forEach((row) => {
+          const markCol = row.querySelector<HTMLElement>('[data-parallax="mark"]')
+          const contentCol = row.querySelector<HTMLElement>('[data-parallax="content"]')
+
+          if (markCol) {
+            gsap.to(markCol, {
+              y: -24,
+              ease: 'none',
+              scrollTrigger: { trigger: row, start: 'top bottom', end: 'bottom top', scrub: true },
+            })
+          }
+          if (contentCol) {
+            gsap.to(contentCol, {
+              y: 14,
+              ease: 'none',
+              scrollTrigger: { trigger: row, start: 'top bottom', end: 'bottom top', scrub: true },
+            })
+          }
+        })
+      }
     }, section)
 
     return () => ctx.revert()
@@ -116,13 +154,23 @@ export default function Experience() {
       ref={sectionRef}
       id="work"
       className="relative overflow-hidden"
-      style={{
-        background: 'var(--bp-slate-900)',
-        backgroundImage:
-          'linear-gradient(var(--bp-slate-grid) 1px, transparent 1px), linear-gradient(90deg, var(--bp-slate-grid) 1px, transparent 1px)',
-        backgroundSize: '32px 32px',
-      }}
+      style={{ backgroundColor: 'var(--bp-slate-900)' }}
     >
+      {/* Background grid — a separate layer, oversized so the parallax drift
+          never reveals an edge, transformed independently of scroll flow */}
+      <div
+        ref={bgRef}
+        aria-hidden="true"
+        className="absolute inset-x-0 pointer-events-none"
+        style={{
+          top: '-15%',
+          height: '130%',
+          backgroundImage:
+            'linear-gradient(var(--bp-slate-grid) 1px, transparent 1px), linear-gradient(90deg, var(--bp-slate-grid) 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
+        }}
+      />
+
       {/* Cover beat — sheet header + statement occupy their own viewport-ish pass */}
       <div data-cover className="relative min-h-[100svh] flex flex-col justify-center overflow-hidden">
         <div
