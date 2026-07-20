@@ -24,8 +24,7 @@ function StructuralElement({ element }: { element: (typeof elements)[number] }) 
   return (
     <div
       data-reveal-item
-      className="grid grid-cols-[minmax(0,220px)_1fr] gap-8 py-9 border-t max-md:grid-cols-1 max-md:gap-3"
-      style={{ borderColor: 'var(--bp-slate-grid)' }}
+      className="grid grid-cols-[minmax(0,220px)_1fr] gap-8 p-8 rounded-xl border border-[rgba(138,136,128,0.22)] bg-[rgba(255,255,255,0.015)] hover:border-[rgba(138,136,128,0.4)] hover:bg-[rgba(255,255,255,0.03)] transition-colors duration-300 max-md:grid-cols-1 max-md:gap-4 max-md:p-6"
     >
       <div data-parallax="mark">
         <span
@@ -200,7 +199,7 @@ export default function Experience() {
 
       {/* Content beat — role entries reveal individually as they scroll into view */}
       <div className="relative max-w-[900px] mx-auto px-6 md:px-10 pb-32">
-        <div className="border-b" style={{ borderColor: 'var(--bp-slate-grid)' }}>
+        <div className="flex flex-col gap-6">
           {elements.map((el) => (
             <StructuralElement key={el.id} element={el} />
           ))}
