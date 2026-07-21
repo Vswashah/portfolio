@@ -14,30 +14,6 @@ const qualities: [string, string][] = [
   ['ACCELERATOR', 'CometX Accelerator 2026 — UT Dallas x Harvard Business School Foundry | Top 20 / 181 Teams, Draper Pitch Competition'],
 ]
 
-// Deterministic PRNG (mulberry32) so the ASCII texture's "random" layout is
-// identical on server and client — Math.random() here would cause a
-// hydration mismatch.
-function mulberry32(seed: number) {
-  return function () {
-    seed |= 0
-    seed = (seed + 0x6d2b79f5) | 0
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
-
-const ASCII_CHARS = ['·', '·', '·', '░', '░', '▒', '▓', '█', '0', '1']
-
-const ASCII_CELL_COUNT = 140
-const asciiRand = mulberry32(1337)
-const asciiCells = Array.from({ length: ASCII_CELL_COUNT }, (_, i) => ({
-  id: i,
-  top: asciiRand() * 100,
-  left: asciiRand() * 100,
-  char: ASCII_CHARS[Math.floor(asciiRand() * ASCII_CHARS.length)],
-}))
-
 export default function Hero() {
   const headerRef = useRef<HTMLElement>(null)
   const nameRef = useRef<HTMLHeadingElement>(null)
@@ -114,38 +90,6 @@ export default function Hero() {
     return () => ctx.revert()
   }, [])
 
-  // Ambient ASCII/pixel-art texture behind the name — a sparse field of
-  // block/binary characters that occasionally scramble to a new glyph via
-  // ScrambleTextPlugin, reading as a living digital noise rather than a
-  // fixed decoration. Static (no scrambling) under reduced motion.
-  useEffect(() => {
-    const header = headerRef.current
-    if (!header) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-
-    const cells = header.querySelectorAll<HTMLSpanElement>('[data-ascii-char]')
-    if (!cells.length) return
-
-    const interval = setInterval(() => {
-      const batchSize = 6
-      for (let i = 0; i < batchSize; i++) {
-        const el = cells[Math.floor(Math.random() * cells.length)]
-        const newChar = ASCII_CHARS[Math.floor(Math.random() * ASCII_CHARS.length)]
-        gsap.to(el, {
-          duration: 0.8,
-          scrambleText: { text: newChar, chars: '01░▒▓█·', speed: 0.4 },
-          opacity: 0.5,
-          ease: 'power1.inOut',
-          onComplete: () => {
-            gsap.to(el, { opacity: 0.22, duration: 1.2, ease: 'power1.out' })
-          },
-        })
-      }
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [])
-
   return (
     <header
       ref={headerRef}
@@ -160,28 +104,6 @@ export default function Hero() {
         backgroundSize: 'auto, 32px 32px, 32px 32px',
       }}
     >
-      {/* Ambient ASCII/pixel-art texture — sparse, low-opacity, behind everything */}
-      <div aria-hidden="true" className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
-        {asciiCells.map((cell) => (
-          <span
-            key={cell.id}
-            data-ascii-char
-            className="absolute"
-            style={{
-              top: `${cell.top}%`,
-              left: `${cell.left}%`,
-              fontFamily: 'var(--ff-plex-mono)',
-              fontSize: '13px',
-              lineHeight: 1,
-              color: '#6f6d66',
-              opacity: 0.22,
-            }}
-          >
-            {cell.char}
-          </span>
-        ))}
-      </div>
-
       <div className="relative z-10 flex-1 flex flex-col justify-center max-w-[1400px] w-full mx-auto px-6 md:px-10 py-24">
         <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10">
           <div className="flex-1 min-w-0">
